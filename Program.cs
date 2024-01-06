@@ -1,19 +1,36 @@
-﻿using System.Reflection;
-using OfficeOpenXml;
+﻿using System;
+using System.IO;
+using System.Text.Json;
+using ExcelToObject.Models;
+using ExcelToObject.Utils;
 
-namespace ExcelToObject;
-class Program
+namespace ExcelToObject
 {
-    static void Main(string[] args)
+    class Program
     {
-        string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"ExcelFile.xlsx");
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        var package = new ExcelPackage(new FileInfo(path));
-        ExcelWorksheet sheet = package.Workbook.Worksheets["WorkBook"];
+        static void Main(string[] args)
+        {
+            try
+            {
+                string sheetName = "WorkBook";
+                string path = Path.Combine(Directory.GetCurrentDirectory(), @"asserts\ExcelFile.xlsx");
 
-        var table = sheet.Tables.First();
-        var x = ExcelExtension.ConvertTableToObjects<dynamic>(table);
-
-        Console.WriteLine("Hello, World!");
+                var table = Extensions.ImportToDataTable(path, sheetName);
+                if (table != null)
+                {
+                    var list = Extensions.DataTableToList<Person>(table);
+                    if (list != null)
+                    {
+                        string jsonString = JsonSerializer.Serialize(list);
+                        Console.WriteLine(jsonString);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
     }
 }
